@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  hp-tuning:
+    image: mlops2_hp-tuning:dev
+    build: .
+    volumes:
+      - ./checkpoints:/app/checkpoints
+      - ./logs:/app/logs
