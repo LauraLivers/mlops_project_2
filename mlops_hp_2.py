@@ -17,6 +17,8 @@ from lightning.pytorch.loggers import TensorBoardLogger
 from transformers import get_cosine_schedule_with_warmup
 from transformers import get_constant_schedule_with_warmup
 
+
+# default configuration best on best result from project I
 DEFAULT_CONFIG = {
     'learning_rate': 2e-5,
     'warmup_steps': 0,
@@ -137,13 +139,13 @@ class GLUEDataModule(L.LightningDataModule):
     
 class GLUETransformer(L.LightningModule):
     """ implements the model forward pass and training/validation steps
-        this is where the LOGGING happenes """
+        This is where the logging should be added """
     def __init__(
         self,
         model_name_or_path: str,
         num_labels: int,
         task_name: str,
-        # Hyperparameters
+        # Hyperparameters from DEFAULT_CONFIG
         **kwargs,
     ):
         super().__init__()
@@ -202,7 +204,7 @@ class GLUETransformer(L.LightningModule):
         self.validation_step_outputs.clear()
 
     def configure_optimizers(self):
-        """Prepare optimizer and schedule (linear warmup and decay)"""
+        """Prepare optimizer and schedule """
         model = self.model
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
@@ -239,13 +241,13 @@ class GLUETransformer(L.LightningModule):
             raise ValueError(f"Unsupported optimizer type: {self.hparams.optimizer_type}")
 
         # scheduler based on type
-        if self.hparams.lr_scheduler == 'cosine':
+        if self.hparams.lr_scheduler.lower() == 'cosine':
             scheduler = get_cosine_schedule_with_warmup(
                 optimizer,
                 num_warmup_steps=self.hparams.warmup_steps,
                 num_training_steps=self.trainer.estimated_stepping_batches,
             )
-        elif self.hparams.lr_scheduler == 'constant':
+        elif self.hparams.lr_scheduler.lower() == 'constant':
             scheduler = get_constant_schedule_with_warmup(
                 optimizer,
                 num_warmup_steps=self.hparams.warmup_steps,
@@ -272,6 +274,7 @@ def get_accelerator():
         return "cpu", 1, "Using CPU"
     
 def get_next_run_number():
+    """ helper function for model persistenc during training runs """
     if not os.path.exists('./checkpoints'):
         return 1
     runs = [d for d in os.listdir('./checkpoints') if d.startswith('run_')]
@@ -280,6 +283,7 @@ def get_next_run_number():
     return max([int(r.split('_')[1]) for r in runs]) + 1
 
 def get_latest_checkpoint():
+    """ helper function for model persistenc during training runs """
     if not os.path.exists('./checkpoints'):
         return None
     all_ckpts = glob.glob('./checkpoints/run_*.ckpt')
@@ -288,9 +292,9 @@ def get_latest_checkpoint():
     return max(all_ckpts, key=os.path.getmtime)
 
 def run(**kwargs):
-    """ run a training experiment with finetuned hyperparameters. If non are given, the run will
-    use the best result values found during manual tuning
-    """
+    """ run a training experiment with finetuned hyperparameters. 
+    If non are given, the run will use the best result values 
+    found during manual tuning """
     params = DEFAULT_CONFIG.copy()
     params.update(kwargs)
     L.seed_everything(params['seed'])
