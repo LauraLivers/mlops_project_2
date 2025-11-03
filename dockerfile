@@ -1,10 +1,9 @@
 FROM python:3.12-slim as base
 
 # system dependencies for hardware detection
-RUN apt-get update && apt-get install -y \
-    lshw \
-    pciutils \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y execstack && \
+    find /usr/local/lib/python3.12/site-packages -name "*.so*" -exec execstack -c {} \; 2>/dev/null || true && \
+    rm -rf /var/lib/apt/lists/*
 
 # hardware detection
 FROM base as hardware-detector
@@ -25,28 +24,20 @@ COPY requirements-rocm.txt requirements-rocm.txt
 COPY requirements-cpu.txt requirements-cpu.txt
 
 # install dependencies based on detected files
-RUN HARDWARE=$(cat /hardware_info.txt) && \
+RUN HARDWARE=$(cat /hardware_info.txt) %% \
     echo "Detected hardware: $HARDWARE" && \
+    pip install -r requirements-base.txt && \
     if [ "$HARDWARE" = 'nvidia' ]; then \
         echo "Installing CUDA PyTorch" && \
         pip install -r requirements-cuda.txt; \
-        pip install -r requirements-base.txt && \
-        echo "DETECTED: $HARDWARE hardware" && \
-        echo "TO RUN: docker run --gpus all mlops2_hp-tuning:dev"; \
     elif [ "$HARDWARE" = 'amd' ]; then \
         echo "Installing ROCm PyTorch" && \
         pip install -r requirements-rocm.txt; \
-        pip install -r requirements-base.txt && \
-        echo "DETECTED: $HARDWARE hardware" && \
-        echo "TO RUN: docker compose run hp-tuning"; \
     else \
         echo "Installing CPU PyTorch" && \
-        pip install -r requirements-cpu.txt;\
-        pip install -r requirements-base.txt && \
-        echo "DETECTED: $HARDWARE hardware" && \
-        echo "TO RUN: docker compose run hp-tuning"; \
-    fi 
-   
+        pip isntall -r requirements-cpu.txt; \
+    fi
+
 
 # copy application code
 COPY . .
