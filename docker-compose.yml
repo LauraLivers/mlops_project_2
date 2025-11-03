@@ -7,16 +7,5 @@ services:
     volumes:
       - ./checkpoints:/app/checkpoints
       - ./logs:/app/logs
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
     environment:
     - PYTHONUNBUFFERED=1

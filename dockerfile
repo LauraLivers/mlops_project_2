@@ -25,20 +25,28 @@ COPY requirements-rocm.txt requirements-rocm.txt
 COPY requirements-cpu.txt requirements-cpu.txt
 
 # install dependencies based on detected files
-RUN HARDWARE=$(cat /hardware_info.txt) %% \
+RUN HARDWARE=$(cat /hardware_info.txt) && \
     echo "Detected hardware: $HARDWARE" && \
-    pip install -r requirements-base.txt && \
     if [ "$HARDWARE" = 'nvidia' ]; then \
         echo "Installing CUDA PyTorch" && \
         pip install -r requirements-cuda.txt; \
+        pip install -r requirements-base.txt && \
+        echo "DETECTED: $HARDWARE hardware" && \
+        echo "TO RUN: docker run --gpus all mlops2_hp-tuning:dev"; \
     elif [ "$HARDWARE" = 'amd' ]; then \
         echo "Installing ROCm PyTorch" && \
         pip install -r requirements-rocm.txt; \
+        pip install -r requirements-base.txt && \
+        echo "DETECTED: $HARDWARE hardware" && \
+        echo "TO RUN: docker compose run hp-tuning"; \
     else \
         echo "Installing CPU PyTorch" && \
-        pip isntall -r requirements-cpu.txt;
-    fi
-
+        pip install -r requirements-cpu.txt;\
+        pip install -r requirements-base.txt && \
+        echo "DETECTED: $HARDWARE hardware" && \
+        echo "TO RUN: docker compose run hp-tuning"; \
+    fi 
+   
 
 # copy application code
 COPY . .

@@ -1,0 +1,19 @@
+adam_beta1: 0.9
+adam_beta2: 0.999
+epochs: 3
+eval_batch_size: 32
+eval_splits:
+- validation
+fresh_start: false
+learning_rate: 2.0e-05
+lr_scheduler: linear
+max_seq_length: 128
+model_name_or_path: distilbert-base-uncased
+num_labels: 2
+optimizer_type: adamw
+seed: 42
+sgd_momentum: 0.9
+task_name: mrpc
+train_batch_size: 32
+warmup_steps: 0
+weight_decay: 0.0
