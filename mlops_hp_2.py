@@ -266,10 +266,15 @@ class GLUETransformer(L.LightningModule):
 
 def get_accelerator():
     """ enable use of the best available backend """
+    # NVIDIA
     if torch.cuda.is_available():
-        return "gpu", 1, "Using GPU acceleration"
+        return "gpu", 1, "Using GPU acceleration (CUDA)"
+    # MAC Silicon
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-        return "mps", 1, "Using Metal Performance Shaders"
+        return "mps", 1, "Using Metal Performance Shaders (MPS)"
+    # AMD Ryzen
+    elif hasattr(torch, 'version') and hasattr(torch.version, 'hip') and torch.version.hip is not None:
+        return "gpu", 1, "Using GPU acceleration (ROCm/HIP)"
     else:
         return "cpu", 1, "Using CPU"
     
