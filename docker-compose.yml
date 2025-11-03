@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   hp-tuning:
     image: mlops2_hp-tuning:dev
@@ -8,4 +6,23 @@ services:
       - ./checkpoints:/app/checkpoints
       - ./logs:/app/logs
     environment:
-    - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1
+    # AMD ROCm support
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    security_opt:
+      - seccomp:unconfined
+    ipc: host
+    shm_size: 8gb
+    # CUDA support (nvidia-docker runtime)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
