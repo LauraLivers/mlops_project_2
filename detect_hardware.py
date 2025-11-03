@@ -1,0 +1,22 @@
+import subprocess
+import sys
+
+def detect_gpu():
+    """ detect GPU hardware and return appropriate backend """
+    try:
+        # NVIDIA
+        result = subprocess.run(['lspci'], capture_output=True, text=True)
+        lspci_output = result.stdout.lower()
+
+        if 'nvidia' in lspci_output and 'vga' in lspci_output:
+            return 'nvidia'
+        elif ('amd' in lspci_output or 'ati' in lspci_output) and 'vga' in lspci_output:
+            return 'amd'
+        else:
+            return 'cpu'
+    except Exception:
+        return 'cpu'
+
+if __name__ == "__main__":
+    hardware = detect_gpu()
+    print(hardware)
