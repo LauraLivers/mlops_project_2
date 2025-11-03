@@ -1,9 +1,10 @@
 FROM python:3.12-slim as base
 
 # system dependencies for hardware detection
-RUN apt-get update && apt-get install -y execstack && \
-    find /usr/local/lib/python3.12/site-packages -name "*.so*" -exec execstack -c {} \; 2>/dev/null || true && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    pciutils \
+    execstack \
+    && rm -rf /var/lib/apt/lists/*
 
 # hardware detection
 FROM base as hardware-detector
