@@ -21,3 +21,5 @@ def detect_gpu():
 if __name__ == "__main__":
     hardware = detect_gpu()
     print(hardware)
+
+# docker run --rm python:3.12-slim sh -c "apt-get update && apt-get install -y pciutils && lspci"
