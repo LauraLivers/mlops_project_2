@@ -11,7 +11,7 @@ def detect_gpu():
         if 'nvidia' in lspci_output and 'vga' in lspci_output:
             return 'nvidia'
         # AMD Ryzen
-        elif ('amd' in lspci_output or 'ati' in lspci_output) and 'vga' in lspci_output:
+        elif 'amd' in lspci_output or 'ati' in lspci_output or 'radeon' in lspci_output:
             return 'amd'
         else:
             return 'cpu'
