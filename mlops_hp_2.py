@@ -365,7 +365,13 @@ def run(**kwargs):
     )
 
     # Train
-    trainer.fit(model, datamodule=dm)
+    try:
+        trainer.fit(model, datamodule=dm)
+    except Exception as e:
+        print(f"Training failed with error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     results = {
         "run_number" : run_number,

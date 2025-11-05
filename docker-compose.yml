@@ -5,6 +5,7 @@ services:
     volumes:
       - ./checkpoints:/app/checkpoints
       - ./logs:/app/logs
+      - ./miopen-cache:/tmp/miopen-cache
     ipc: host
     shm_size: 8gb
 
@@ -16,20 +17,21 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - video
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
     environment:
       - PYTHONUNBUFFERED=1
-      - HSA_OVERRIDE_GFX_VERSION=10.3.0
-      - LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libSegFault.so
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+      - MIOPEN_DISABLE_CACHE=0
+      - MIOPEN_USER_DB_PATH=/tmp/miopen-cache
+      - MIOPEN_CUSTOM_CACHE_DIR=/tmp/miopen-cache
+      - AMD_LOG_LEVEL=1
+    
+    privileged: true
+    security_opt:
+      - seccomp=unconfined
+      - apparmor=unconfined
+      - systempaths=unconfined
     cap_add:
-      - SYS-PTRACE
-      - IPC_LOCK 
-    ulimits:
-      stack:
-        soft: 67108864
-        hard: 67108864
+      - ALL
     
 
   hp-tuning-nvidia:
