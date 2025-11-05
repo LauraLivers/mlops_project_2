@@ -5,8 +5,6 @@ services:
     volumes:
       - ./checkpoints:/app/checkpoints
       - ./logs:/app/logs
-    environment:
-      - PYTHONUNBUFFERED=1
     ipc: host
     shm_size: 8gb
 
@@ -20,6 +18,19 @@ services:
       - video
     security_opt:
       - seccomp:unconfined
+      - apparmor:unconfined
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0
+      - LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libSegFault.so
+    cap_add:
+      - SYS-PTRACE
+      - IPC_LOCK 
+    ulimits:
+      stack:
+        soft: 67108864
+        hard: 67108864
+    
 
   hp-tuning-nvidia:
     extends: hp-tuning

@@ -14,7 +14,10 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 ```
 ├── Dockerfile                  # Docker configuration
 ├── docker-compose.yml          # Docker Compose setup
-├── requirements.txt            # Python dependencies
+├── requirements-base.txt       # Python dependencies
+├── requirements-cuda.txt       # PyTorch for CUDA/MPS 
+├── requirements-rocm.txt       # PyTorch for AMD
+├── requirements-cpu.txt        # PyTorch for CPU
 ├── mlops_hp_2.py               # Main training script
 ├── checkpoints/                # Model checkpoints (created at runtime, not in git)
 │   └── run_XXX_[params]/
@@ -38,13 +41,13 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 ### 1. Build the Docker Image
 Only needed once, or when Dockerfile/requirements change:
 ```shell
-docker compose build
+docker compose build --no-cache # run no-cache flag while debugging
 ```
 
 ### 2. Run Training
 **With default hyperparameters**
 ```shell
-docker compose run hp-tuning --flag [flag_value]
+docker compose run hp-tuning-[hardware] --flag [flag_value] # cuda, amd, cpu
 ```
 
 **Available flags**
@@ -68,6 +71,7 @@ docker compose down
 
 ## Monitoring with TensorBoard
 ### Start TensorBoard
+run this from inside the parent folder:
 ```shell
 tensorboard --logdir logs/hp_tuning --port 6006 --host localhost --reload_interval 5
 ```
@@ -90,24 +94,27 @@ TensorBoard only serves HTTP. If your browser blocks HTTP on localhost:
 - Each run has a unique name based on hyperparameters
 
 ### Performance
-- **Local:** with MPS or CUDA support ~1 minute per run
+- **Local:** with CUDA or ROCm support ~3 minutes per run
 - **Docker:** with CPU ~20 minutes for 3 Epochs
+note that docker has no access to MPS and will run on CPU. For better performance run directly on the local machine.
 
 ## Troubleshooting
 ### Docker build takes too longs
 The first build downloads ~2GB of dependencies. Subsequent builds use cache and should be significantly faster
 
 **If running the code in Github Codespaces:**
-1. in `requirements.txt` comment out `torch==2.9.0` 
-2. in `dockerfile` add `RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu` before the line installing the dependencies
+The dockerfile automatically builds with the lightweight version of PyTorch designed for CPU. If for any reason it tries to build with `requirements-cuda.txt` you'll have to adjust the dockerfile, by commenting out the install logic and manually add `RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu` before the line installing the dependencies
 This will install a lighter version of torch that should significantly reduce the build time and memory errors.
 
 ### Training is very slow
 Docker on Mac can only use CPU. For faster training, run the script directly:
 ```shell
+python3 -m venv .venv # create new virtual environment
+source .venv/bin/activate # enable the virtual environment
+pip3 install requirements-base.txt requirements-cuda.txt # CUDA and MPS use the same PyTorch version
 python3 mlops_hp_2.py --flag [flag_value]
 ```
-The script is designed to use GPU/MPS if available.
+The script is designed to use MPS if available.
 
 ### TensorBoard shows blank page
 - ensure you've run at least one training session
