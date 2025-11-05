@@ -48,6 +48,12 @@ RUN if [ "$(cat /hardware_info.txt)" = "amd" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Set AMD GPU override for Radeon 780M (gfx1103 -> gfx1100)
+ENV HSA_OVERRIDE_GFX_VERSION=11.0.0
+ENV MIOPEN_DISABLE_CACHE=0
+ENV MIOPEN_USER_DB_PATH=/tmp/miopen-cache
+ENV MIOPEN_CUSTOM_CACHE_DIR=/tmp/miopen-cache
+
 # copy application code
 COPY . .
 

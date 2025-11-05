@@ -20,9 +20,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - HSA_OVERRIDE_GFX_VERSION=11.0.0
-      - MIOPEN_DISABLE_CACHE=0
-      - MIOPEN_USER_DB_PATH=/tmp/miopen-cache
-      - MIOPEN_CUSTOM_CACHE_DIR=/tmp/miopen-cache
+      - MIOPEN_FIND_MODE=NORMAL
+      - MIOPEN_DEBUG_FIND_ONLY_SOLVER=0
+      - MIOPEN_FIND_ENFORCE=SEARCH_DB_UPDATE
       - AMD_LOG_LEVEL=1
     
     privileged: true

@@ -12,7 +12,7 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 
 ## Project Structure
 ```
-├── Dockerfile                  # Docker configuration
+├── dockerfile                  # Docker configuration
 ├── docker-compose.yml          # Docker Compose setup
 ├── requirements-base.txt       # Python dependencies
 ├── requirements-cuda.txt       # PyTorch for CUDA/MPS 
@@ -41,13 +41,18 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 ### 1. Build the Docker Image
 Only needed once, or when Dockerfile/requirements change:
 ```shell
-docker compose build --no-cache # run no-cache flag while debugging
+docker compose build --no-cache # run no-cache flag to build from scratch
 ```
 
 ### 2. Run Training
-**With default hyperparameters**
+**With default hyperparameters**  
+Run the command containing the hardware of the local machine. 
 ```shell
-docker compose run hp-tuning-[hardware] --flag [flag_value] # cuda, amd, cpu
+docker compose run hp-tuning-amd --flag [flag_value] # AMD Ryzen
+# or
+docker compose run hp-tuning-cuda --flag [flag_value] # NVIDIA
+# or
+docker compose run hp-tuning --flag [flag_value] # for CPU
 ```
 
 **Available flags**
@@ -67,6 +72,11 @@ docker compose run hp-tuning-[hardware] --flag [flag_value] # cuda, amd, cpu
 Stop and remove containers:
 ```shell
 docker compose down
+```
+Delete containers from machine
+```shell
+docker prune -f
+XXXXXXXXXX 
 ```
 
 ## Monitoring with TensorBoard
@@ -100,16 +110,14 @@ note that docker has no access to MPS and will run on CPU. For better performanc
 
 ## Troubleshooting
 ### Docker build takes too longs
-The first build downloads ~2GB of dependencies. Subsequent builds use cache and should be significantly faster
-
-**If running the code in Github Codespaces:**
-The dockerfile automatically builds with the lightweight version of PyTorch designed for CPU. If for any reason it tries to build with `requirements-cuda.txt` you'll have to adjust the dockerfile, by commenting out the install logic and manually add `RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu` before the line installing the dependencies
-This will install a lighter version of torch that should significantly reduce the build time and memory errors.
+The first build downloads ~2GB of dependencies. Subsequent builds use cache and should be significantly faster.
 
 ### Training is very slow
-Docker on Mac can only use CPU. For faster training, run the script directly:
+If GPU is available on the local machine, check logs to ensure the hardware is correctly detected.
+For Mac users:  
+Docker on Mac can only use CPU. For faster training, run the script outside of docker:
 ```shell
-python3 -m venv .venv # create new virtual environment
+python3 -m venv .venv # new virtual environment
 source .venv/bin/activate # enable the virtual environment
 pip3 install requirements-base.txt requirements-cuda.txt # CUDA and MPS use the same PyTorch version
 python3 mlops_hp_2.py --flag [flag_value]

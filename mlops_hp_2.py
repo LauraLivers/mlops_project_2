@@ -364,7 +364,7 @@ def run(**kwargs):
         enable_model_summary=False,  # Suppress model summary to reduce clutter
     )
 
-    # Train
+    # Debug but statement not showing
     try:
         trainer.fit(model, datamodule=dm)
     except Exception as e:
