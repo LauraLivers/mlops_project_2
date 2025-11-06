@@ -1,9 +1,9 @@
 FROM python:3.12-slim AS base
+
 # system dependencies for hardware detection
 RUN apt-get update && apt-get install -y \
     pciutils \
     && rm -rf /var/lib/apt/lists/*
-
 # automatic hardware detection
 FROM base AS hardware-detector
 COPY detect_hardware.py /detect_hardware.py
@@ -16,13 +16,13 @@ COPY --from=hardware-detector /hardware_info.txt /hardware_info.txt
 # working directory
 WORKDIR /app
 
-# requirements files depending on hardware
+# hardware dependent requirement files 
 COPY requirements-base.txt requirements-base.txt 
 COPY requirements-cuda.txt requirements-cuda.txt
 COPY requirements-rocm.txt requirements-rocm.txt
 COPY requirements-cpu.txt requirements-cpu.txt
 
-# install dependencies based on detected files
+# install dependencies based on detected files (with cache)
 RUN --mount=type=cache,target=/root/.cache/pip \
     HARDWARE=$(cat /hardware_info.txt) && \
     echo "Detected hardware: $HARDWARE" && \

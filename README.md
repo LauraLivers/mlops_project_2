@@ -33,7 +33,7 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 **Note:** the logs and checkpoints folder will be created automatically during the first run. 
 
 ## Prerequisits
-- Docker Desktop installed and running
+- Docker Engine and Docker Compose installed and running
 - 8GB + RAM allocated to Docker (Settings $\rightarrow$ Resources)
 
 ## Quick Start
@@ -41,19 +41,20 @@ This project implements a PyTorch Lightning training pipeline for fine-tuning Di
 ### 1. Build the Docker Image
 Only needed once, or when Dockerfile/requirements change:
 ```shell
-docker compose build --no-cache # run no-cache flag to build from scratch
+docker compose build --no-cache # use no-cache flag to build from scratch
 ```
 
 ### 2. Run Training
 **With default hyperparameters**  
 Run the command containing the hardware of the local machine. 
 ```shell
-docker compose run hp-tuning-amd --flag [flag_value] # AMD Ryzen
+docker compose run hp-tuning-amd --flag [flag_value] # AMD
 # or
 docker compose run hp-tuning-cuda --flag [flag_value] # NVIDIA
 # or
 docker compose run hp-tuning --flag [flag_value] # for CPU
 ```
+Note, that the AMD-build has only been tested on AMD Ryzen 7 PRO 8840U. If any other AMD chip is used, changes might have to be made to `docker-compose.yml` and `requirements-amd.txt`.
 
 **Available flags**
 - `--learning_rate` (default: 2e-5)
@@ -66,22 +67,17 @@ docker compose run hp-tuning --flag [flag_value] # for CPU
 - `--weight_decay` (default: 0.0)
 - `--adam_beta1`  (default: 0.9)
 - `--adam_beta2`  (default: 0.999)
-- `--fresh_start` (True/False - ignore existing checkpoints)
+- `--fresh_start` (True/False - ignore existing checkpoints if `True`)
 
 ### 3. Clean up
 Stop and remove containers:
 ```shell
 docker compose down
 ```
-Delete containers from machine
-```shell
-docker prune -f
-XXXXXXXXXX 
-```
 
 ## Monitoring with TensorBoard
 ### Start TensorBoard
-run this from inside the parent folder:
+run this from inside the root folder:
 ```shell
 tensorboard --logdir logs/hp_tuning --port 6006 --host localhost --reload_interval 5
 ```
@@ -101,28 +97,25 @@ TensorBoard only serves HTTP. If your browser blocks HTTP on localhost:
 ### Logs
 - TensorBoard logs saved to `./logs/hp_tuning/run_[run_number]_[hyperparameters]/`
 - Logs can be committed to git (update `.gitignore` if needed)
-- Each run has a unique name based on hyperparameters
+- Each run has a unique name based on order and hyperparameters
 
 ### Performance
-- **Local:** with CUDA or ROCm support ~3 minutes per run
-- **Docker:** with CPU ~20 minutes for 3 Epochs
-note that docker has no access to MPS and will run on CPU. For better performance run directly on the local machine.
+- **Local:** with GPU support ~3 minutes for 3 Epochs
+- **Docker:** with GPU support ~3 minutes for 3 Epochs, with CPU ~20 minutes for 3 Epochs
 
+Note, that on a Mac computer there is no GPU support inside the Docker. In this case, run the code native on the local machine:
+```shell
+python3 -m venv .venv # new virtual environment
+source .venv/bin/activate 
+pip3 install requirements-base.txt requirements-cuda.txt # CUDA and MPS use the same PyTorch version
+python3 mlops_hp_2.py --flag [flag_value]
+```
 ## Troubleshooting
 ### Docker build takes too longs
 The first build downloads ~2GB of dependencies. Subsequent builds use cache and should be significantly faster.
 
 ### Training is very slow
-If GPU is available on the local machine, check logs to ensure the hardware is correctly detected.
-For Mac users:  
-Docker on Mac can only use CPU. For faster training, run the script outside of docker:
-```shell
-python3 -m venv .venv # new virtual environment
-source .venv/bin/activate # enable the virtual environment
-pip3 install requirements-base.txt requirements-cuda.txt # CUDA and MPS use the same PyTorch version
-python3 mlops_hp_2.py --flag [flag_value]
-```
-The script is designed to use MPS if available.
+If GPU is available on the local machine, check logs to ensure the hardware is correctly detected during the build process.
 
 ### TensorBoard shows blank page
 - ensure you've run at least one training session

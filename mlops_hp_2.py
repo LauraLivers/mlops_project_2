@@ -18,7 +18,7 @@ from transformers import get_cosine_schedule_with_warmup
 from transformers import get_constant_schedule_with_warmup
 
 
-# default configuration best on best result from project I
+# default configuration best result from project I
 DEFAULT_CONFIG = {
     'learning_rate': 2e-5,
     'warmup_steps': 0,
@@ -275,6 +275,7 @@ def get_accelerator():
     # AMD Ryzen
     elif hasattr(torch, 'version') and hasattr(torch.version, 'hip') and torch.version.hip is not None:
         return "gpu", 1, "Using GPU acceleration (ROCm/HIP)"
+    # fallback
     else:
         return "cpu", 1, "Using CPU"
     
@@ -309,7 +310,7 @@ def run(**kwargs):
 
     run_number = get_next_run_number()
 
-    # use hyperparamters for naming convention
+    # use hyperparameters for naming convention
     hp_str = "_".join([f"{k}_{v}" for k, v in params.items()])
     run_name = f"run_{run_number:03d}_{hp_str}"
     run_dir = f"./checkpoints/{run_name}"
@@ -355,8 +356,8 @@ def run(**kwargs):
     # Setup trainer
     trainer = L.Trainer(
         max_epochs=params['epochs'], # fuction param
-        accelerator=accelerator, # ensure proper backend is used
-        devices=devices, # ensure proper backend is used
+        accelerator=accelerator, # hardware
+        devices=devices, 
         logger=logger,
         callbacks=[checkpoint_callback],
         enable_checkpointing=True,
@@ -364,14 +365,7 @@ def run(**kwargs):
         enable_model_summary=False,  # Suppress model summary to reduce clutter
     )
 
-    # Debug but statement not showing
-    try:
-        trainer.fit(model, datamodule=dm)
-    except Exception as e:
-        print(f"Training failed with error: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
+    trainer.fit(model, datamodule=dm)
 
     results = {
         "run_number" : run_number,
